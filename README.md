@@ -41,7 +41,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/gist-ledger.git
+git clone https://github.com/KnowSky404/gist-ledger.git
 cd gist-ledger
 
 # 2. 安装依赖 (推荐使用 pnpm)
