@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { GistService } from './services/gist';
 import type { LedgerItem } from './services/gist';
-import { Loader2, CheckCircle, Wallet, LogOut } from 'lucide-react';
-import { AddTransactionForm } from './components/AddTransactionForm';
+import { Loader2, CheckCircle, Wallet, LogOut, PieChart as PieChartIcon, PlusCircle, Search } from 'lucide-react';
+import { TransactionForm } from './components/TransactionForm';
+import { StatisticsView } from './components/StatisticsView';
+import { HistoryView } from './components/HistoryView';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 function App() {
   // Auth State
@@ -17,6 +25,9 @@ function App() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [log, setLog] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Navigation State
+  const [activeTab, setActiveTab] = useState<'journal' | 'stats' | 'history'>('journal');
 
   // 初始化：检查本地存储
   useEffect(() => {
@@ -94,26 +105,40 @@ function App() {
     setItems([]);
     setLog('');
     setStatus('idle');
+    setActiveTab('journal');
   };
 
-  const handleAddTransaction = async (newItem: LedgerItem) => {
+  const syncData = async (newItems: LedgerItem[]) => {
     setIsSaving(true);
     try {
       const service = new GistService(token);
-      // 乐观更新：先更新本地状态
-      const updatedItems = [newItem, ...items];
-      setItems(updatedItems);
-      
-      // 再保存到云端
-      await service.saveData(gistId, updatedItems);
+      await service.saveData(gistId, newItems);
     } catch (e) {
       console.error('保存失败', e);
       alert('保存失败，请检查网络或 Token');
-      // 回滚
-      setItems(items); 
+      // 重新拉取以回滚
+      // 真实场景下这里应该做更复杂的错误处理
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAddTransaction = async (newItem: LedgerItem) => {
+    const updatedItems = [newItem, ...items];
+    setItems(updatedItems);
+    await syncData(updatedItems);
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    const updatedItems = items.filter(item => item.id !== id);
+    setItems(updatedItems);
+    await syncData(updatedItems);
+  };
+
+  const handleUpdateTransaction = async (updatedItem: LedgerItem) => {
+    const updatedItems = items.map(item => item.id === updatedItem.id ? updatedItem : item);
+    setItems(updatedItems);
+    await syncData(updatedItems);
   };
 
   // --- 登录界面 ---
@@ -186,44 +211,101 @@ function App() {
             <LogOut size={20} />
           </button>
         </div>
+        
+        {/* Tab 导航 */}
+        <div className="max-w-2xl mx-auto px-4 flex">
+            <button
+              onClick={() => setActiveTab('journal')}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2",
+                activeTab === 'journal' 
+                  ? "border-blue-500 text-blue-600" 
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              )}
+            >
+                <PlusCircle size={16} />
+                记账
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2",
+                activeTab === 'history' 
+                  ? "border-blue-500 text-blue-600" 
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              )}
+            >
+                <Search size={16} />
+                查询
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2",
+                activeTab === 'stats' 
+                  ? "border-blue-500 text-blue-600" 
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              )}
+            >
+                <PieChartIcon size={16} />
+                统计
+            </button>
+        </div>
       </header>
 
       {/* 内容区域 */}
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
         
-        {/* 记账表单 */}
-        <section>
-          <AddTransactionForm onAdd={handleAddTransaction} isLoading={isSaving} />
-        </section>
+        {activeTab === 'journal' && (
+            <>
+                {/* 记账表单 */}
+                <section>
+                    <TransactionForm onSubmit={handleAddTransaction} isLoading={isSaving} />
+                </section>
 
-        {/* 简单列表预览 (临时) */}
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700 px-1">最近记录</h3>
-          {items.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-              还没有记录，快记一笔吧！
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {items.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-800">{item.category}</span>
-                    <span className="text-xs text-gray-400">{item.date} {item.remark ? `· ${item.remark}` : ''}</span>
-                  </div>
-                  <span className={`font-semibold ${item.type === 'expense' ? 'text-gray-900' : 'text-emerald-600'}`}>
-                    {item.type === 'expense' ? '-' : '+'} {item.amount.toFixed(2)}
-                  </span>
-                </div>
-              ))}
-              {items.length > 5 && (
-                 <div className="p-3 text-center text-sm text-gray-500 bg-gray-50 border-t border-gray-100">
-                   显示最近 5 条 / 共 {items.length} 条
-                 </div>
-              )}
-            </div>
-          )}
-        </section>
+                {/* 简单列表预览 */}
+                <section className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700 px-1">最近记录</h3>
+                    {items.length === 0 ? (
+                        <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                            还没有记录，快记一笔吧！
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            {items.slice(0, 5).map((item) => (
+                                <div key={item.id} className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-gray-800">{item.category}</span>
+                                        <span className="text-xs text-gray-400">{item.date} {item.remark ? `· ${item.remark}` : ''}</span>
+                                    </div>
+                                    <span className={`font-semibold ${item.type === 'expense' ? 'text-gray-900' : 'text-emerald-600'}`}>
+                                        {item.type === 'expense' ? '-' : '+'} {item.amount.toFixed(2)}
+                                    </span>
+                                </div>
+                            ))}
+                            {items.length > 5 && (
+                                <div className="p-3 text-center text-sm text-gray-500 bg-gray-50 border-t border-gray-100">
+                                    显示最近 5 条 / 共 {items.length} 条
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </section>
+            </>
+        )}
+
+        {activeTab === 'history' && (
+            <HistoryView 
+                items={items} 
+                onDelete={handleDeleteTransaction} 
+                onUpdate={handleUpdateTransaction}
+                isLoading={isSaving}
+            />
+        )}
+
+        {activeTab === 'stats' && (
+            <StatisticsView items={items} />
+        )}
 
       </main>
     </div>

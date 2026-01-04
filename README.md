@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# GistLedger
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**GistLedger** 是一个基于 GitHub Gist 的极简个人记账应用。它利用 GitHub Gist 作为免费、私有的云端数据库，实现数据的安全存储与多端同步。
 
-Currently, two official plugins are available:
+🌐 **核心理念**: Own your data (数据隐私) | Serverless (无后端) | Lightweight (轻量化)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ 功能特性
 
-## React Compiler
+### 1. 📝 极简记账 (Journal)
+*   **快速录入**: 支持收入/支出切换，金额、分类、日期、备注一键录入。
+*   **最近记录**: 首页实时展示最近 5 笔交易，方便快速核对。
+*   **完全私有**: 数据仅存储在你的 GitHub Gist 中，无第三方服务器读取。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. 📊 统计报表 (Statistics)
+*   **月度概览**: 清晰展示本月收入、支出及结余。
+*   **趋势分析**: 可视化年度收支趋势图，掌握财务健康状况。
+*   **历史回溯**: 支持按月切换，查看过往月份的财务数据。
 
-## Expanding the ESLint configuration
+### 3. 🔍 查询管理 (Query)
+*   **多维筛选**: 支持按类型（收入/支出）、日期范围、关键词（分类/备注）进行组合查询。
+*   **数据管理**: 支持对历史记录进行**修改**或**删除**。
+*   **客户端分页**: 即使数据量大也能流畅分页浏览。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 技术栈
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*   **框架**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+*   **构建工具**: [Vite](https://vitejs.dev/)
+*   **样式**: [Tailwind CSS v4](https://tailwindcss.com/)
+*   **图标**: [Lucide React](https://lucide.dev/)
+*   **API**: [Octokit](https://github.com/octokit/octokit.js) (GitHub REST API)
+*   **部署**: Cloudflare Pages / Vercel / GitHub Pages (纯静态部署)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 快速开始
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 前置准备
+1.  拥有一个 GitHub 账号。
+2.  生成一个 [GitHub Personal Access Token (Classic)](https://github.com/settings/tokens)。
+    *   **Scope 权限**: 必须勾选 `gist` 权限。
+
+### 本地运行
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/your-username/gist-ledger.git
+cd gist-ledger
+
+# 2. 安装依赖 (推荐使用 pnpm)
+pnpm install
+
+# 3. 启动开发服务器
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 使用说明
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1.  打开应用后，在登录页输入你的 **GitHub Personal Access Token**。
+2.  点击 **"连接数据库"**。
+    *   如果是首次使用，应用会自动在你的 Gist 中创建一个名为 `GistLedger-Data` 的私有 Gist 和 `ledger_data.json` 文件。
+    *   如果已有数据，会自动同步拉取。
+3.  开始记账！你的 Token 和 Gist ID 会保存在本地浏览器缓存中，下次访问无需重复输入（除非清除缓存或点击退出）。
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🔒 数据安全
+
+*   应用**不会**将你的 Token 发送给除 GitHub API 以外的任何服务器。
+*   数据存储在你的**私有 Gist** 中，只有拥有该 Token 的人才能访问。
+*   建议定期备份 Gist 数据或使用 GitHub 的版本历史功能回滚误操作。
+
+## 📄 License
+
+MIT
