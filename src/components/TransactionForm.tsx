@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PlusCircle, MinusCircle, Calendar, Tag, FileText, IndianRupee, Wallet, Save } from 'lucide-react';
 import type { LedgerItem } from '../services/gist';
 import { clsx, type ClassValue } from 'clsx';
@@ -21,29 +21,11 @@ const CATEGORIES = {
 };
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, isLoading, initialData, onCancel }) => {
-  const [type, setType] = useState<'expense' | 'income'>('expense');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState(CATEGORIES.expense[0]);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [remark, setRemark] = useState('');
-
-  // 初始化回显数据
-  useEffect(() => {
-    if (initialData) {
-      setType(initialData.type);
-      setAmount(initialData.amount.toString());
-      setCategory(initialData.category);
-      setDate(initialData.date);
-      setRemark(initialData.remark || '');
-    } else {
-        // Reset defaults if needed when switching back to "Add" mode
-        setType('expense');
-        setAmount('');
-        setCategory(CATEGORIES.expense[0]);
-        setDate(new Date().toISOString().split('T')[0]);
-        setRemark('');
-    }
-  }, [initialData]);
+  const [type, setType] = useState<'expense' | 'income'>(initialData?.type || 'expense');
+  const [amount, setAmount] = useState(initialData?.amount.toString() || '');
+  const [category, setCategory] = useState(initialData?.category || (initialData?.type === 'income' ? CATEGORIES.income[0] : CATEGORIES.expense[0]));
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+  const [remark, setRemark] = useState(initialData?.remark || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { LedgerItem } from '../services/gist';
-import { TrendingUp, TrendingDown, Calendar, DollarSign, Activity, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Wallet } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

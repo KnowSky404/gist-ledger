@@ -79,6 +79,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ items, onDelete, onUpd
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="w-full max-w-md">
             <TransactionForm 
+                key={editingItem.id}
                 initialData={editingItem} 
                 onSubmit={handleEditSubmit} 
                 isLoading={isLoading}

@@ -260,7 +260,7 @@ function App() {
             <>
                 {/* 记账表单 */}
                 <section>
-                    <TransactionForm onSubmit={handleAddTransaction} isLoading={isSaving} />
+                    <TransactionForm key="add" onSubmit={handleAddTransaction} isLoading={isSaving} />
                 </section>
 
                 {/* 简单列表预览 */}
