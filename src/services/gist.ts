@@ -1,15 +1,18 @@
 // src/services/gist.ts
 import { Octokit } from "octokit";
 
-// 定义数据文件名，相当于数据库的"表名"
 const DATA_FILENAME = "ledger_data.json";
 
+/**
+ * Ledger data item structure
+ */
 export interface LedgerItem {
   id: string;
   date: string;
   amount: number;
   category: string;
   remark?: string;
+  type: 'expense' | 'income';
 }
 
 export class GistService {
@@ -52,5 +55,17 @@ export class GistService {
 
     const content = data.files?.[DATA_FILENAME]?.content;
     return content ? JSON.parse(content) : [];
+  }
+
+  // 4. 保存数据
+  async saveData(gistId: string, items: LedgerItem[]) {
+    await this.octokit.request("PATCH /gists/{gist_id}", {
+      gist_id: gistId,
+      files: {
+        [DATA_FILENAME]: {
+          content: JSON.stringify(items, null, 2)
+        }
+      }
+    });
   }
 }
