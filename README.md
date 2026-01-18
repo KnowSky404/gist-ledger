@@ -8,8 +8,8 @@
 
 <div align="center">
     <img src="./docs/Transaction.PNG" width="32%" alt="Transaction Form" />
-    <img src="./docs/StatisticsView.PNG" width="32%" alt="Statistics View" />
     <img src="./docs/HistoryView.PNG" width="32%" alt="History View" />
+    <img src="./docs/StatisticsView.PNG" width="32%" alt="Statistics View" />
 </div>
 
 ## ✨ 功能特性
