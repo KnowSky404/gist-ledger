@@ -4,7 +4,7 @@
 
 🌐 **核心理念**: Own your data (数据隐私) | Serverless (无后端) | Lightweight (轻量化)
 
-[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/KnowSky404/gist-ledger)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KnowSky404/gist-ledger)
 
 ## 📸 项目预览
 
