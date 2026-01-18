@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { LedgerItem } from '../services/gist';
-import { TrendingUp, TrendingDown, Activity, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Wallet, Filter, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -58,14 +58,47 @@ const SimpleLineChart = ({ data, color, height = 100 }: { data: number[], color:
 
 export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
+  // --- 提取分类 ---
+  const categories = useMemo(() => {
+    const income = new Set<string>();
+    const expense = new Set<string>();
+
+    items.forEach(item => {
+      if (item.type === 'income') income.add(item.category);
+      else expense.add(item.category);
+    });
+
+    return {
+      income: Array.from(income),
+      expense: Array.from(expense)
+    };
+  }, [items]);
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(cat) 
+        ? prev.filter(c => c !== cat)
+        : [...prev, cat]
+    );
+  };
+
+  const clearFilter = () => setSelectedCategories([]);
+
   // --- 数据处理 ---
   const stats = useMemo(() => {
+    // 先根据分类筛选
+    const filteredItems = items.filter(item => 
+      selectedCategories.length === 0 || selectedCategories.includes(item.category)
+    );
+
     // 1. 本月数据
-    const monthItems = items.filter(item => {
+    const monthItems = filteredItems.filter(item => {
         const d = new Date(item.date);
         return d.getFullYear() === year && (d.getMonth() + 1) === month;
     });
@@ -74,7 +107,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
     const monthExpense = monthItems.filter(i => i.type === 'expense').reduce((sum, i) => sum + i.amount, 0);
 
     // 2. 本年数据
-    const yearItems = items.filter(item => {
+    const yearItems = filteredItems.filter(item => {
         const d = new Date(item.date);
         return d.getFullYear() === year;
     });
@@ -97,7 +130,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
         year: { income: yearIncome, expense: yearExpense, balance: yearIncome - yearExpense },
         trend: { income: monthlyTrendIncome, expense: monthlyTrendExpense }
     };
-  }, [items, year, month]);
+  }, [items, year, month, selectedCategories]);
 
   const changeMonth = (offset: number) => {
     const newDate = new Date(currentDate);
@@ -109,17 +142,103 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
     <div className="space-y-6">
       
       {/* 顶部控制栏 */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-        <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
-            ←
-        </button>
-        <div className="flex flex-col items-center">
-            <span className="font-bold text-lg text-slate-800">{year}年 {month}月</span>
-            <span className="text-xs text-slate-400">统计周期</span>
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+            <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
+                ←
+            </button>
+            <div className="flex flex-col items-center">
+                <span className="font-bold text-lg text-slate-800">{year}年 {month}月</span>
+                <span className="text-xs text-slate-400">统计周期</span>
+            </div>
+            <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
+                →
+            </button>
         </div>
-        <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
-            →
-        </button>
+
+        {/* 筛选按钮区 */}
+        <div className="flex justify-center border-t border-slate-50 pt-3">
+             <button 
+                onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all",
+                    isFilterExpanded || selectedCategories.length > 0 
+                        ? "bg-slate-100 text-slate-800 font-medium" 
+                        : "text-slate-500 hover:bg-slate-50"
+                )}
+             >
+                <Filter size={16} />
+                {selectedCategories.length > 0 ? `已选 ${selectedCategories.length} 个分类` : "筛选分类"}
+             </button>
+        </div>
+
+        {/* 筛选面板 */}
+        {isFilterExpanded && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex flex-col gap-4 p-4 bg-slate-50 rounded-xl">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">选择分类</span>
+                        {selectedCategories.length > 0 && (
+                            <button onClick={clearFilter} className="text-xs text-slate-500 flex items-center gap-1 hover:text-rose-500 transition-colors">
+                                <X size={12} /> 清除筛选
+                            </button>
+                        )}
+                    </div>
+
+                    {/* 支出分类 */}
+                    {categories.expense.length > 0 && (
+                        <div>
+                            <span className="text-xs text-slate-400 mb-2 block">支出</span>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.expense.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => toggleCategory(cat)}
+                                        className={cn(
+                                            "px-3 py-1 rounded-full text-sm border transition-all",
+                                            selectedCategories.includes(cat)
+                                                ? "bg-rose-100 border-rose-200 text-rose-700 shadow-sm"
+                                                : "bg-white border-slate-200 text-slate-600 hover:border-rose-200"
+                                        )}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 收入分类 */}
+                    {categories.income.length > 0 && (
+                        <div>
+                            <span className="text-xs text-slate-400 mb-2 block">收入</span>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.income.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => toggleCategory(cat)}
+                                        className={cn(
+                                            "px-3 py-1 rounded-full text-sm border transition-all",
+                                            selectedCategories.includes(cat)
+                                                ? "bg-emerald-100 border-emerald-200 text-emerald-700 shadow-sm"
+                                                : "bg-white border-slate-200 text-slate-600 hover:border-emerald-200"
+                                        )}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {(categories.income.length === 0 && categories.expense.length === 0) && (
+                        <div className="text-center text-slate-400 text-sm py-2">
+                            暂无分类数据
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
       </div>
 
       {/* 月度概览卡片 */}
