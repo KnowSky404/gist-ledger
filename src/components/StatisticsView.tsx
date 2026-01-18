@@ -98,7 +98,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
       selectedCategories.length === 0 || selectedCategories.includes(item.category)
     );
 
-    // 1. 本月数据
+    // 1. 本月数据 (概览卡片用)
     const monthItems = filteredItems.filter(item => {
         const d = new Date(item.date);
         return d.getFullYear() === year && (d.getMonth() + 1) === month;
@@ -107,20 +107,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
     const monthIncome = monthItems.filter(i => i.type === 'income').reduce((sum, i) => sum + i.amount, 0);
     const monthExpense = monthItems.filter(i => i.type === 'expense').reduce((sum, i) => sum + i.amount, 0);
 
-    // 计算月度每日趋势
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const dailyTrendIncome = Array(daysInMonth).fill(0);
-    const dailyTrendExpense = Array(daysInMonth).fill(0);
-
-    monthItems.forEach(item => {
-        const d = new Date(item.date).getDate() - 1; // 0-based index
-        if (d >= 0 && d < daysInMonth) {
-            if (item.type === 'income') dailyTrendIncome[d] += item.amount;
-            else dailyTrendExpense[d] += item.amount;
-        }
-    });
-
-    // 2. 本年数据
+    // 2. 本年数据 (概览卡片用 & 月视图趋势图用)
     const yearItems = filteredItems.filter(item => {
         const d = new Date(item.date);
         return d.getFullYear() === year;
@@ -129,7 +116,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
     const yearIncome = yearItems.filter(i => i.type === 'income').reduce((sum, i) => sum + i.amount, 0);
     const yearExpense = yearItems.filter(i => i.type === 'expense').reduce((sum, i) => sum + i.amount, 0);
 
-    // 3. 年度趋势 (12个月)
+    // 3. 当年 12个月趋势 (月视图趋势图)
     const monthlyTrendIncome = Array(12).fill(0);
     const monthlyTrendExpense = Array(12).fill(0);
     
@@ -139,18 +126,39 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
         else monthlyTrendExpense[m] += item.amount;
     });
 
+    // 4. 近5年趋势 (年视图趋势图)
+    // [year-4, year-3, year-2, year-1, year]
+    const fiveYearTrendIncome = Array(5).fill(0);
+    const fiveYearTrendExpense = Array(5).fill(0);
+    const startYear = year - 4;
+
+    const fiveYearItems = filteredItems.filter(item => {
+        const y = new Date(item.date).getFullYear();
+        return y >= startYear && y <= year;
+    });
+
+    fiveYearItems.forEach(item => {
+        const y = new Date(item.date).getFullYear();
+        const index = y - startYear;
+        if (index >= 0 && index < 5) {
+            if (item.type === 'income') fiveYearTrendIncome[index] += item.amount;
+            else fiveYearTrendExpense[index] += item.amount;
+        }
+    });
+
+
     return {
         month: { 
             income: monthIncome, 
             expense: monthExpense, 
             balance: monthIncome - monthExpense,
-            trend: { income: dailyTrendIncome, expense: dailyTrendExpense }
+            trend: { income: monthlyTrendIncome, expense: monthlyTrendExpense } // 当年1-12月趋势
         },
         year: { 
             income: yearIncome, 
             expense: yearExpense, 
             balance: yearIncome - yearExpense,
-            trend: { income: monthlyTrendIncome, expense: monthlyTrendExpense }
+            trend: { income: fiveYearTrendIncome, expense: fiveYearTrendExpense } // 近5年趋势
         }
     };
   }, [items, year, month, selectedCategories]);
@@ -171,12 +179,13 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
   // X轴标签生成
   const xAxisLabels = useMemo(() => {
     if (viewMode === 'year') {
-        return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        // 返回近5年的年份
+        const startYear = year - 4;
+        return Array.from({length: 5}, (_, i) => `${startYear + i}年`);
     }
-    // 月视图：显示 1, 5, 10, 15, 20, 25, (end)
-    const days = stats.month.trend.income.length;
-    return Array.from({length: days}, (_, i) => i + 1).filter(d => d === 1 || d % 5 === 0);
-  }, [viewMode, stats.month.trend.income.length]);
+    // 月视图：显示 1月 - 12月
+    return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+  }, [viewMode, year]);
 
   return (
     <div className="space-y-6">
@@ -339,7 +348,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
         <div className="flex items-center justify-between">
             <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <Activity className="text-indigo-500" size={18} />
-                {viewMode === 'month' ? `${month}月 每日趋势` : `${year}年 月度趋势`}
+                {viewMode === 'month' ? `${year}年 月度趋势` : `近5年 年度趋势`}
             </h3>
         </div>
 
@@ -347,7 +356,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
             <div>
                 <div className="flex justify-between text-xs text-emerald-600 mb-1 font-medium">
                     <span>收入趋势</span>
-                    <span>总计: {currentStats.income.toFixed(0)}</span>
+                    <span>总计: {viewMode === 'month' ? stats.year.income.toFixed(0) : currentStats.income.toFixed(0)}</span>
                 </div>
                 <SimpleLineChart data={currentTrend.income} color="#10b981" height={80} />
             </div>
@@ -355,7 +364,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
             <div className="pt-4 border-t border-slate-50">
                 <div className="flex justify-between text-xs text-rose-600 mb-1 font-medium">
                     <span>支出趋势</span>
-                    <span>总计: {currentStats.expense.toFixed(0)}</span>
+                    <span>总计: {viewMode === 'month' ? stats.year.expense.toFixed(0) : currentStats.expense.toFixed(0)}</span>
                 </div>
                 <SimpleLineChart data={currentTrend.expense} color="#f43f5e" height={80} />
             </div>
@@ -363,10 +372,9 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ items }) => {
         
         {/* X轴标签 */}
         <div className="flex justify-between px-1 text-xs text-slate-400">
-            {viewMode === 'year' 
-                ? xAxisLabels.map(m => <span key={m}>{m}</span>)
-                : xAxisLabels.map(d => <span key={d}>{d}日</span>)
-            }
+            {xAxisLabels.map(l => (
+                <span key={l}>{l}</span>
+            ))}
         </div>
       </div>
     </div>
