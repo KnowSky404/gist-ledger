@@ -9,7 +9,7 @@
 
 ## 2. 技术栈 (Tech Stack)
 请严格遵守以下技术选型，不要引入额外的重量级库：
-- **包管理器**: pnpm (v10+)
+- **包管理器**: bun (v1.3+)
 - **构建工具**: Vite
 - **框架**: React (v18+) + TypeScript
 - **样式**: Tailwind CSS (PostCSS)

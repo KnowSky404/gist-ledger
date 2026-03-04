@@ -56,11 +56,11 @@
 git clone https://github.com/KnowSky404/gist-ledger.git
 cd gist-ledger
 
-# 2. 安装依赖 (推荐使用 pnpm)
-pnpm install
+# 2. 安装依赖 (推荐使用 bun)
+bun install
 
 # 3. 启动开发服务器
-pnpm dev
+bun run dev
 ```
 
 ### 使用说明
