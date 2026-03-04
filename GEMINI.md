@@ -5,7 +5,7 @@
 - **核心理念**: 数据隐私（Own your data）、Serverless、轻量化。
 - **运行模式**: 纯前端 SPA (Single Page Application)。
 - **数据存储**: 利用 GitHub Gist 作为 JSON 数据库 (通过 GitHub API 读写)。
-- **托管环境**: Cloudflare Pages。
+- **托管环境**: Cloudflare Workers（静态资源部署）。
 
 ## 2. 技术栈 (Tech Stack)
 请严格遵守以下技术选型，不要引入额外的重量级库：

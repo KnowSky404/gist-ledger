@@ -4,7 +4,7 @@
 
 🌐 **核心理念**: Own your data (数据隐私) | Serverless (无后端) | Lightweight (轻量化)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KnowSky404/gist-ledger)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/KnowSky404/gist-ledger)
 
 ## 📸 项目预览
 
@@ -40,7 +40,7 @@
 *   **样式**: [Tailwind CSS v4](https://tailwindcss.com/)
 *   **图标**: [Lucide React](https://lucide.dev/)
 *   **API**: [Octokit](https://github.com/octokit/octokit.js) (GitHub REST API)
-*   **部署**: Cloudflare Pages / Vercel / GitHub Pages (纯静态部署)
+*   **部署**: Cloudflare Workers / GitHub Pages
 
 ## 🚀 快速开始
 
@@ -62,6 +62,33 @@ bun install
 # 3. 启动开发服务器
 bun run dev
 ```
+
+### 部署到 Cloudflare Workers
+
+#### 方式 1: 一键部署
+
+点击文档顶部的 **Deploy to Cloudflare Workers** 按钮，按 Cloudflare 引导完成仓库导入与部署。
+
+#### 方式 2: Wrangler CLI（推荐本仓库维护者使用）
+
+```bash
+# 1. 登录 Cloudflare
+bunx wrangler login
+
+# 2. 本地预览 Workers 版本
+bun run cf:dev
+
+# 3. 发布到 Cloudflare Workers
+bun run cf:deploy
+```
+
+> 本项目已内置 `wrangler.toml`，使用静态资源托管（`assets.directory = "./dist"`）并启用 SPA 路由回退（`not_found_handling = "single-page-application"`）。
+
+#### 自定义域名迁移（从 Pages 切到 Workers）
+
+1. 先在 `*.workers.dev` 地址验证页面正常。
+2. 从 Cloudflare Pages 项目里解绑原自定义域名。
+3. 在 Workers 项目中绑定同一个自定义域名。
 
 ### 使用说明
 
