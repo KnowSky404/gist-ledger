@@ -4,6 +4,8 @@
 
 🌐 **核心理念**: Own your data (数据隐私) | Serverless (无后端) | Lightweight (轻量化)
 
+> 当前状态：`云笺账本 / GistLedger` 已支持中英双语、深色模式、月预算、固定模板与模板提醒、响应式桌面布局，以及本地化金额/日期/导出格式。
+
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/KnowSky404/gist-ledger)
 
 ## 📸 项目预览
@@ -48,6 +50,13 @@
 ### 4. ☁️ 同步体验优化
 *   **同步状态可见**: 顶部会实时显示“正在同步 / 云端已同步 / 同步失败”。
 *   **失败自动回滚**: 保存失败时会恢复到上一次成功状态，避免界面数据与 Gist 数据不一致。
+
+
+## 🤝 协作约定
+
+- 仓库维护约束：每一次实际变动完成后，都应立即提交一次 `git commit`。
+- 如果一轮工作同时包含功能改动和文档/流程调整，建议拆成两次提交，保持历史清晰。
+- 凡是影响功能、命名、工作流或使用方式的改动，都要同步更新 `README.md`。
 
 ## 🛠 技术栈
 

@@ -1,32 +1,29 @@
-# Project Context: GistLedger
+# GistLedger Agent Notes
 
-## 1. 项目简介 (Project Overview)
-**GistLedger** 是一个极简的、无后端的个人记账应用。
-- **核心理念**: 数据隐私（Own your data）、Serverless、轻量化。
-- **运行模式**: 纯前端 SPA (Single Page Application)。
-- **数据存储**: 利用 GitHub Gist 作为 JSON 数据库 (通过 GitHub API 读写)。
-- **托管环境**: Cloudflare Workers（静态资源部署）。
+## Project Identity
+- English name: `GistLedger`
+- Chinese name: `云笺账本`
+- This project is a private cloud ledger built on GitHub Gist, focused on lightweight UX, serverless architecture, user-owned data, and responsive desktop/mobile layouts.
 
-## 2. 技术栈 (Tech Stack)
-请严格遵守以下技术选型，不要引入额外的重量级库：
-- **包管理器**: bun (v1.3+)
-- **构建工具**: Vite
-- **框架**: React (v18+) + TypeScript
-- **样式**: Tailwind CSS (PostCSS)
-    - *注意*: 项目手动配置了 `postcss.config.js` 和 `tailwind.config.js`，避免使用 CLI 命令初始化。
-- **图标库**: lucide-react
-- **API 交互**: octokit (GitHub Rest API)
-- **工具库**: clsx, tailwind-merge (用于合并样式)
+## Current Working Memory
+- The repository currently supports bilingual UI (`中文` / `English`), light/dark theme, monthly budget tracking, recurring templates, template reminders, responsive desktop layouts, and localized date/amount/export formatting.
+- Data is currently split into `ledger_data.json` for entries and `ledger_settings.json` for budget/template settings.
 
-## 3. 核心数据结构 (Data Schema)
-数据存储在 Gist 的 `ledger_data.json` 文件中，格式为 JSON 数组：
+## Required Workflow Rules
+- After every real code or documentation change, create a `git commit` immediately instead of leaving multiple rounds of work uncommitted.
+- If a turn includes both product work and workflow/documentation updates, prefer separate commits so history stays readable.
+- Any change that affects product capability, naming, workflow, or usage must update `README.md`.
+- Any change that affects agent collaboration rules must update both `AGENTS.md` and `GEMINI.md`.
+- Temporary files such as `tmp*.json` must stay out of version control.
 
-```typescript
-interface LedgerItem {
-  id: string;       // UUID
-  date: string;     // YYYY-MM-DD
-  amount: number;   // 金额
-  category: string; // 分类 (e.g., "餐饮", "交通", "购物")
-  remark?: string;  // 备注 (可选)
-  type: 'expense' | 'income'; // 收支类型
-}
+## Commit Guidance
+- Keep commit messages short and explicit, preferably using prefixes like `feat:`, `fix:`, `docs:`, `refactor:`, or `chore:`.
+- Before committing, make sure `bun run lint` and `bun run build` pass locally.
+
+## Stack
+- Package manager: `bun`
+- Frontend: `React` + `TypeScript` + `Vite`
+- Styling: `Tailwind CSS v4`
+- Icons: `lucide-react`
+- Data access: `octokit`
+- Deployment: `Cloudflare Workers`
