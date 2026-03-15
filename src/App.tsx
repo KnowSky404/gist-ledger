@@ -12,6 +12,7 @@ import {
   AlertCircle,
   RefreshCw,
   Languages,
+  Monitor,
   Moon,
   Sun,
 } from 'lucide-react';
@@ -47,23 +48,31 @@ type SyncState = 'idle' | 'saving' | 'saved' | 'error';
 type Notice = { type: 'success' | 'error'; text: string } | null;
 type ActiveTab = 'journal' | 'stats' | 'history';
 type Theme = 'light' | 'dark';
+type ThemePreference = Theme | 'system';
 
 const APP_SHELL_CLASS = 'max-w-[1680px] mx-auto px-4 md:px-6 xl:px-8';
 
 
-const getPreferredTheme = (): Theme => {
+const getSystemTheme = (): Theme => {
   if (typeof window === 'undefined') {
     return 'light';
-  }
-
-  const saved = window.localStorage.getItem('gist_theme');
-  if (saved === 'light' || saved === 'dark') {
-    return saved;
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
+const getPreferredTheme = (): ThemePreference => {
+  if (typeof window === 'undefined') {
+    return 'system';
+  }
+
+  const saved = window.localStorage.getItem('gist_theme');
+  if (saved === 'light' || saved === 'dark' || saved === 'system') {
+    return saved;
+  }
+
+  return 'system';
+};
 
 const getSavedTab = (): ActiveTab => {
   if (typeof window === 'undefined') {
@@ -124,33 +133,61 @@ const LanguageSwitcher = ({ locale, onChange }: { locale: Locale; onChange: (loc
 };
 
 const ThemeSwitcher = ({
-  theme,
-  onToggle,
+  preference,
+  onChange,
   label,
+  systemLabel,
   lightLabel,
   darkLabel,
 }: {
-  theme: Theme;
-  onToggle: () => void;
+  preference: ThemePreference;
+  onChange: (value: ThemePreference) => void;
   label: string;
+  systemLabel: string;
   lightLabel: string;
   darkLabel: string;
 }) => {
+  const options = [
+    { value: 'system' as const, label: systemLabel, icon: Monitor },
+    { value: 'light' as const, label: lightLabel, icon: Sun },
+    { value: 'dark' as const, label: darkLabel, icon: Moon },
+  ];
+
   return (
-    <button
-      onClick={onToggle}
-      title={label}
-      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm"
+    <div
+      role="group"
+      aria-label={label}
+      className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 gap-1 shadow-sm"
     >
-      {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-      <span className="hidden sm:inline">{theme === 'dark' ? lightLabel : darkLabel}</span>
-    </button>
+      {options.map((option) => {
+        const Icon = option.icon;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            title={option.label}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-sm transition-colors inline-flex items-center gap-1.5',
+              preference === option.value
+                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100',
+            )}
+          >
+            <Icon size={14} />
+            <span className="hidden sm:inline">{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 };
 
 function App() {
   const [locale, setLocale] = useState<Locale>(getPreferredLocale);
-  const [theme, setTheme] = useState<Theme>(getPreferredTheme);
+  const [themePreference, setThemePreference] = useState<ThemePreference>(getPreferredTheme);
+  const [systemTheme, setSystemTheme] = useState<Theme>(getSystemTheme);
+  const theme = themePreference === 'system' ? systemTheme : themePreference;
   const copy = messages[locale];
   const [token, setToken] = useState('');
   const [gistId, setGistId] = useState('');
@@ -232,10 +269,31 @@ function App() {
   }, [copy.appName, locale]);
 
   useEffect(() => {
-    window.localStorage.setItem('gist_theme', theme);
+    window.localStorage.setItem('gist_theme', themePreference);
+  }, [themePreference]);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => setSystemTheme(media.matches ? 'dark' : 'light');
+    handleChange();
+
+    if (media.addEventListener) {
+      media.addEventListener('change', handleChange);
+      return () => media.removeEventListener('change', handleChange);
+    }
+
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('gist_token');
@@ -485,7 +543,17 @@ function App() {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950/60 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-800">
           <div className="flex items-center justify-end mb-4">
-            <div className="flex items-center gap-2"><ThemeSwitcher theme={theme} onToggle={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')} label={copy.common.themeToggle} lightLabel={copy.common.themeLight} darkLabel={copy.common.themeDark} /><LanguageSwitcher locale={locale} onChange={setLocale} /></div>
+            <div className="flex items-center gap-2">
+              <ThemeSwitcher
+                preference={themePreference}
+                onChange={setThemePreference}
+                label={copy.common.themeToggle}
+                systemLabel={copy.common.themeSystem}
+                lightLabel={copy.common.themeLight}
+                darkLabel={copy.common.themeDark}
+              />
+              <LanguageSwitcher locale={locale} onChange={setLocale} />
+            </div>
           </div>
 
           <div className="flex flex-col items-center mb-8">
@@ -558,7 +626,14 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <ThemeSwitcher theme={theme} onToggle={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')} label={copy.common.themeToggle} lightLabel={copy.common.themeLight} darkLabel={copy.common.themeDark} />
+            <ThemeSwitcher
+              preference={themePreference}
+              onChange={setThemePreference}
+              label={copy.common.themeToggle}
+              systemLabel={copy.common.themeSystem}
+              lightLabel={copy.common.themeLight}
+              darkLabel={copy.common.themeDark}
+            />
             <LanguageSwitcher locale={locale} onChange={setLocale} />
             <button
               onClick={handleLogout}
