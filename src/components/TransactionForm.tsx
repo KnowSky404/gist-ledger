@@ -95,15 +95,14 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   }, [category, existingItems, locale, type]);
 
   const budgetSnapshot = useMemo(() => {
-    if (type !== 'expense') {
+    if (initialData || type !== 'expense') {
       return null;
     }
 
     return getMonthBudgetSnapshot(existingItems, parseLedgerDate(date), monthlyExpenseBudget, {
-      excludeId: initialData?.id,
       extraExpense: normalizedAmount > 0 ? normalizedAmount : 0,
     });
-  }, [date, existingItems, initialData?.id, monthlyExpenseBudget, normalizedAmount, type]);
+  }, [date, existingItems, initialData, monthlyExpenseBudget, normalizedAmount, type]);
 
   const datalistId = initialData ? `transaction-category-edit-${initialData.id}` : 'transaction-category-create';
 
