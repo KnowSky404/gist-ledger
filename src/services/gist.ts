@@ -59,23 +59,53 @@ const normalizeItems = (value: unknown): LedgerItem[] => {
   return value.map(normalizeLedgerItem).filter((item): item is LedgerItem => Boolean(item));
 };
 
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
+const isValidMonthlyBudget = (value: unknown): value is number =>
+  typeof value === 'number' && !Number.isNaN(value) && value > 0;
+
 const normalizeSettings = (value: unknown): LedgerSettings => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isPlainRecord(value)) {
     return {};
   }
 
-  const candidate = value as Record<string, unknown>;
   const settings: LedgerSettings = {};
 
-  if (
-    typeof candidate.monthlyExpenseBudget === 'number' &&
-    !Number.isNaN(candidate.monthlyExpenseBudget) &&
-    candidate.monthlyExpenseBudget > 0
-  ) {
-    settings.monthlyExpenseBudget = candidate.monthlyExpenseBudget;
+  if (isValidMonthlyBudget(value.monthlyExpenseBudget)) {
+    settings.monthlyExpenseBudget = value.monthlyExpenseBudget;
   }
 
   return settings;
+};
+
+const needsSettingsCleanup = (value: unknown): boolean => {
+  if (!isPlainRecord(value)) {
+    return true;
+  }
+
+  if (Object.keys(value).some((key) => key !== 'monthlyExpenseBudget')) {
+    return true;
+  }
+
+  if ('monthlyExpenseBudget' in value && !isValidMonthlyBudget(value.monthlyExpenseBudget)) {
+    return true;
+  }
+
+  return false;
+};
+
+const parseSettingsContent = (content?: string): { settings: LedgerSettings; needsCleanup: boolean } => {
+  if (!content) {
+    return { settings: {}, needsCleanup: false };
+  }
+
+  try {
+    const raw = JSON.parse(content) as unknown;
+    return { settings: normalizeSettings(raw), needsCleanup: needsSettingsCleanup(raw) };
+  } catch {
+    return { settings: {}, needsCleanup: true };
+  }
 };
 
 export class GistService {
@@ -122,12 +152,16 @@ export class GistService {
       gist_id: gistId,
     });
 
-    const content = data.files?.[SETTINGS_FILENAME]?.content;
-    if (!content) {
-      return {};
+    const { settings, needsCleanup } = parseSettingsContent(data.files?.[SETTINGS_FILENAME]?.content);
+    if (needsCleanup) {
+      try {
+        await this.saveSettings(gistId, settings);
+      } catch (error) {
+        console.warn('Failed to clean up ledger settings', error);
+      }
     }
 
-    return normalizeSettings(JSON.parse(content) as unknown);
+    return settings;
   }
 
   async getLedger(gistId: string): Promise<LedgerPayload> {
@@ -136,11 +170,19 @@ export class GistService {
     });
 
     const itemsContent = data.files?.[DATA_FILENAME]?.content;
-    const settingsContent = data.files?.[SETTINGS_FILENAME]?.content;
+    const { settings, needsCleanup } = parseSettingsContent(data.files?.[SETTINGS_FILENAME]?.content);
+
+    if (needsCleanup) {
+      try {
+        await this.saveSettings(gistId, settings);
+      } catch (error) {
+        console.warn('Failed to clean up ledger settings', error);
+      }
+    }
 
     return {
       items: normalizeItems(itemsContent ? JSON.parse(itemsContent) as unknown : []),
-      settings: normalizeSettings(settingsContent ? JSON.parse(settingsContent) as unknown : {}),
+      settings,
     };
   }
 
@@ -156,11 +198,12 @@ export class GistService {
   }
 
   async saveSettings(gistId: string, settings: LedgerSettings) {
+    const normalizedSettings = normalizeSettings(settings);
     await this.octokit.request('PATCH /gists/{gist_id}', {
       gist_id: gistId,
       files: {
         [SETTINGS_FILENAME]: {
-          content: JSON.stringify(settings, null, 2),
+          content: JSON.stringify(normalizedSettings, null, 2),
         },
       },
     });
