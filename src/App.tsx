@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GistService } from './services/gist';
-import type { LedgerItem, LedgerSettings, LedgerTemplate } from './services/gist';
+import type { LedgerItem, LedgerSettings } from './services/gist';
 import {
   Check,
   Loader2,
@@ -20,8 +20,6 @@ import {
 import { TransactionForm } from './components/TransactionForm';
 import { StatisticsView } from './components/StatisticsView';
 import { HistoryView } from './components/HistoryView';
-import { TemplatePanel } from './components/TemplatePanel';
-import { TemplateTodoPanel } from './components/TemplateTodoPanel';
 import {
   formatAmount,
   formatDisplayDate,
@@ -32,12 +30,7 @@ import {
   messages,
   type Locale,
 } from './i18n';
-import {
-  getMonthBudgetSnapshot,
-  getTemplateEntryDate,
-  getTemplateExecutionState,
-  parseLedgerDate,
-} from './utils/ledger';
+import { getMonthBudgetSnapshot, parseLedgerDate } from './utils/ledger';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -89,27 +82,6 @@ const removeBudget = (settings: LedgerSettings): LedgerSettings => {
   const nextSettings = { ...settings };
   delete nextSettings.monthlyExpenseBudget;
   return nextSettings;
-};
-
-const removeTemplate = (settings: LedgerSettings, templateId: string): LedgerSettings => {
-  const currentTemplates = settings.quickTemplates ?? [];
-  return {
-    ...settings,
-    quickTemplates: currentTemplates.filter((template) => template.id !== templateId),
-  };
-};
-
-const upsertTemplate = (settings: LedgerSettings, nextTemplate: LedgerTemplate): LedgerSettings => {
-  const currentTemplates = settings.quickTemplates ?? [];
-  const existingIndex = currentTemplates.findIndex((template) => template.id === nextTemplate.id);
-
-  if (existingIndex === -1) {
-    return { ...settings, quickTemplates: [nextTemplate, ...currentTemplates] };
-  }
-
-  const nextTemplates = [...currentTemplates];
-  nextTemplates[existingIndex] = nextTemplate;
-  return { ...settings, quickTemplates: nextTemplates };
 };
 
 type IconMenuOption<T extends string> = {
@@ -288,8 +260,6 @@ function App() {
   const [notice, setNotice] = useState<Notice>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>(getSavedTab);
 
-  const quickTemplates = useMemo(() => settings.quickTemplates ?? [], [settings.quickTemplates]);
-
   const recentItems = useMemo(
     () =>
       [...items]
@@ -327,22 +297,6 @@ function App() {
     () => getMonthBudgetSnapshot(items, new Date(), settings.monthlyExpenseBudget),
     [items, settings.monthlyExpenseBudget],
   );
-
-  const templateReminderSummary = useMemo(() => {
-    return quickTemplates.reduce(
-      (accumulator, template) => {
-        const state = getTemplateExecutionState(template, items, new Date());
-        if (state.tone === 'due') {
-          accumulator.due += 1;
-        }
-        if (state.tone === 'upcoming') {
-          accumulator.upcoming += 1;
-        }
-        return accumulator;
-      },
-      { due: 0, upcoming: 0 },
-    );
-  }, [items, quickTemplates]);
 
   const markSynced = useCallback(() => {
     setSyncState('saved');
@@ -568,39 +522,6 @@ function App() {
     );
   };
 
-  const handleTemplateSave = async (template: LedgerTemplate) => {
-    const previousSettings = settings;
-    const nextSettings = upsertTemplate(settings, template);
-    setSettings(nextSettings);
-    await syncSettings(
-      nextSettings,
-      previousSettings,
-      previousSettings.quickTemplates?.some((item) => item.id === template.id) ? copy.toast.templateUpdated : copy.toast.templateCreated,
-      copy.toast.templateRollback,
-    );
-  };
-
-  const handleTemplateDelete = async (templateId: string) => {
-    const previousSettings = settings;
-    const nextSettings = removeTemplate(settings, templateId);
-    setSettings(nextSettings);
-    await syncSettings(nextSettings, previousSettings, copy.toast.templateDeleted, copy.toast.templateDeleteRollback);
-  };
-
-  const handleApplyTemplate = async (template: LedgerTemplate) => {
-    const item: LedgerItem = {
-      id: crypto.randomUUID(),
-      date: getTemplateEntryDate(template, new Date()),
-      amount: template.amount,
-      category: template.category,
-      remark: template.remark,
-      type: template.type,
-      templateId: template.id,
-    };
-
-    await handleAddTransaction(item);
-  };
-
   const syncIndicator = {
     idle: {
       label: copy.dashboard.statusIdle,
@@ -757,7 +678,7 @@ function App() {
       </header>
 
       <main className={cn(APP_SHELL_CLASS, 'py-6 xl:py-8 space-y-6')}>
-        <section className="grid grid-cols-2 xl:grid-cols-5 gap-3 xl:gap-4">
+        <section className="grid grid-cols-2 xl:grid-cols-4 gap-3 xl:gap-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
             <div className="text-xs text-slate-400 dark:text-slate-500 mb-2">{copy.dashboard.syncStatus}</div>
             <div className={cn('inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border', syncIndicator.className)}>
@@ -799,21 +720,10 @@ function App() {
                 : copy.dashboard.budgetUnset}
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm col-span-2 xl:col-span-1">
-            <div className="text-xs text-slate-400 dark:text-slate-500 mb-2">{copy.dashboard.fixedTemplates}</div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{quickTemplates.length}</div>
-            <div className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-              {templateReminderSummary.due > 0
-                ? copy.dashboard.fixedTemplatesPending(templateReminderSummary.due)
-                : quickTemplates.length > 0
-                  ? copy.dashboard.fixedTemplatesAllClear
-                  : copy.dashboard.fixedTemplatesDesc}
-            </div>
-          </div>
         </section>
 
         {activeTab === 'journal' && (
-          <div className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-[minmax(0,1.1fr)_460px_420px] items-start">
+          <div className="grid gap-6 xl:grid-cols-2 items-start">
             <section className="space-y-6">
               <TransactionForm
                 key={`add-${locale}`}
@@ -825,27 +735,7 @@ function App() {
               />
             </section>
 
-            <aside className="space-y-6 xl:col-span-1 2xl:col-span-1">
-              <TemplatePanel
-                templates={quickTemplates}
-                items={items}
-                isSaving={isSaving}
-                onSaveTemplate={handleTemplateSave}
-                onDeleteTemplate={handleTemplateDelete}
-                onApplyTemplate={handleApplyTemplate}
-                locale={locale}
-              />
-            </aside>
-
-            <section className="space-y-6 xl:col-span-2 2xl:col-span-1">
-              <TemplateTodoPanel
-                templates={quickTemplates}
-                items={items}
-                locale={locale}
-                isSaving={isSaving}
-                onApplyTemplate={handleApplyTemplate}
-              />
-
+            <section className="space-y-6">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>

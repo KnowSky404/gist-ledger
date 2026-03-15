@@ -10,22 +10,10 @@ export interface LedgerItem {
   category: string;
   remark?: string;
   type: 'expense' | 'income';
-  templateId?: string;
-}
-
-export interface LedgerTemplate {
-  id: string;
-  name: string;
-  type: 'expense' | 'income';
-  category: string;
-  amount: number;
-  remark?: string;
-  dayOfMonth?: number;
 }
 
 export interface LedgerSettings {
   monthlyExpenseBudget?: number;
-  quickTemplates?: LedgerTemplate[];
 }
 
 export interface LedgerPayload {
@@ -60,54 +48,7 @@ const normalizeLedgerItem = (value: unknown): LedgerItem | null => {
     amount: candidate.amount,
     type: candidate.type,
     remark: typeof candidate.remark === 'string' && candidate.remark.trim() ? candidate.remark.trim() : undefined,
-    templateId: typeof candidate.templateId === 'string' && candidate.templateId.trim() ? candidate.templateId : undefined,
   };
-};
-
-const normalizeTemplate = (value: unknown): LedgerTemplate | null => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return null;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  if (
-    typeof candidate.id !== 'string' ||
-    typeof candidate.name !== 'string' ||
-    typeof candidate.category !== 'string' ||
-    typeof candidate.amount !== 'number' ||
-    Number.isNaN(candidate.amount) ||
-    candidate.amount <= 0 ||
-    !isLedgerType(candidate.type)
-  ) {
-    return null;
-  }
-
-  const template: LedgerTemplate = {
-    id: candidate.id,
-    name: candidate.name.trim(),
-    category: candidate.category.trim(),
-    amount: candidate.amount,
-    type: candidate.type,
-  };
-
-  if (typeof candidate.remark === 'string' && candidate.remark.trim()) {
-    template.remark = candidate.remark.trim();
-  }
-
-  if (
-    typeof candidate.dayOfMonth === 'number' &&
-    Number.isInteger(candidate.dayOfMonth) &&
-    candidate.dayOfMonth >= 1 &&
-    candidate.dayOfMonth <= 31
-  ) {
-    template.dayOfMonth = candidate.dayOfMonth;
-  }
-
-  if (!template.name || !template.category) {
-    return null;
-  }
-
-  return template;
 };
 
 const normalizeItems = (value: unknown): LedgerItem[] => {
@@ -132,12 +73,6 @@ const normalizeSettings = (value: unknown): LedgerSettings => {
     candidate.monthlyExpenseBudget > 0
   ) {
     settings.monthlyExpenseBudget = candidate.monthlyExpenseBudget;
-  }
-
-  if (Array.isArray(candidate.quickTemplates)) {
-    settings.quickTemplates = candidate.quickTemplates
-      .map(normalizeTemplate)
-      .filter((template): template is LedgerTemplate => Boolean(template));
   }
 
   return settings;

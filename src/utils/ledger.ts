@@ -1,5 +1,5 @@
-import type { LedgerItem, LedgerTemplate } from '../services/gist';
-import { areCategoriesEquivalent, formatAmount, getDefaultCategories, localizeCategoryLabel, messages, type Locale } from '../i18n';
+import type { LedgerItem } from '../services/gist';
+import { formatAmount, getDefaultCategories, localizeCategoryLabel, messages, type Locale } from '../i18n';
 
 export const DEFAULT_CATEGORIES: Record<LedgerItem['type'], string[]> = {
   expense: [...getDefaultCategories('zh').expense],
@@ -37,79 +37,6 @@ export const isSameMonth = (left: Date, right: Date) => {
   return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
 };
 
-export const getDateForDayOfMonth = (referenceDate: Date, dayOfMonth: number) => {
-  const year = referenceDate.getFullYear();
-  const month = referenceDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  return new Date(year, month, Math.min(Math.max(dayOfMonth, 1), daysInMonth));
-};
-
-export const getTemplateEntryDate = (template: LedgerTemplate, referenceDate = new Date()) => {
-  if (template.dayOfMonth) {
-    return formatDateValue(getDateForDayOfMonth(referenceDate, template.dayOfMonth));
-  }
-
-  return formatDateValue(referenceDate);
-};
-
-export type TemplateExecutionTone = 'default' | 'done' | 'due' | 'upcoming';
-
-export const getTemplateExecutionState = (
-  template: LedgerTemplate,
-  items: LedgerItem[],
-  referenceDate = new Date(),
-) => {
-  const scheduledDate = template.dayOfMonth ? getDateForDayOfMonth(referenceDate, template.dayOfMonth) : referenceDate;
-  const matchedThisMonth = items.some((item) => {
-    const itemDate = parseLedgerDate(item.date);
-    if (!isSameMonth(itemDate, referenceDate)) {
-      return false;
-    }
-
-    if (item.templateId === template.id) {
-      return true;
-    }
-
-    return (
-      item.type === template.type &&
-      item.amount === template.amount &&
-      areCategoriesEquivalent(item.category, template.category, template.type) &&
-      (item.remark ?? '') === (template.remark ?? '')
-    );
-  });
-
-  if (!template.dayOfMonth) {
-    return {
-      tone: 'default' as TemplateExecutionTone,
-      scheduledDate,
-      matchedThisMonth,
-    };
-  }
-
-  if (matchedThisMonth) {
-    return {
-      tone: 'done' as TemplateExecutionTone,
-      scheduledDate,
-      matchedThisMonth,
-    };
-  }
-
-  const monthEndTime = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth(),
-    referenceDate.getDate(),
-    23,
-    59,
-    59,
-    999,
-  ).getTime();
-
-  return {
-    tone: scheduledDate.getTime() <= monthEndTime ? 'due' as TemplateExecutionTone : 'upcoming' as TemplateExecutionTone,
-    scheduledDate,
-    matchedThisMonth,
-  };
-};
 
 const getCategoryRank = (items: LedgerItem[], type: LedgerItem['type']) => {
   const rankMap = new Map<string, { count: number; lastUsed: number }>();
