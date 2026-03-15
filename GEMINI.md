@@ -6,8 +6,8 @@
 - This project is a private cloud ledger built on GitHub Gist, focused on lightweight UX, serverless architecture, user-owned data, and responsive desktop/mobile layouts.
 
 ## Current Working Memory
-- The repository currently supports bilingual UI (`中文` / `English`), light/dark theme, monthly budget tracking, recurring templates, template reminders, responsive desktop layouts, and localized date/amount/export formatting.
-- Data is currently split into `ledger_data.json` for entries and `ledger_settings.json` for budget/template settings.
+- The repository currently supports bilingual UI (`中文` / `English`), light/dark theme, monthly budget tracking, responsive desktop layouts, and localized date/amount/export formatting.
+- Data is currently split into `ledger_data.json` for entries and `ledger_settings.json` for budget settings.
 
 ## Required Workflow Rules
 - After every real code or documentation change, create a `git commit` immediately instead of leaving multiple rounds of work uncommitted.
