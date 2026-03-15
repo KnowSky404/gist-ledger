@@ -59,19 +59,15 @@ const normalizeItems = (value: unknown): LedgerItem[] => {
   return value.map(normalizeLedgerItem).filter((item): item is LedgerItem => Boolean(item));
 };
 
-const parseItemsContent = (content?: string): { items: LedgerItem[]; needsCleanup: boolean } => {
+const parseItemsContent = (content?: string): LedgerItem[] => {
   if (!content) {
-    return { items: [], needsCleanup: false };
+    return [];
   }
 
   try {
-    const raw = JSON.parse(content) as unknown;
-    const items = normalizeItems(raw);
-    const needsCleanup =
-      Array.isArray(raw) && raw.some((item) => isPlainRecord(item) && 'templateId' in item);
-    return { items, needsCleanup };
+    return normalizeItems(JSON.parse(content) as unknown);
   } catch {
-    return { items: [], needsCleanup: false };
+    return [];
   }
 };
 
@@ -160,16 +156,7 @@ export class GistService {
       gist_id: gistId,
     });
 
-    const { items, needsCleanup } = parseItemsContent(data.files?.[DATA_FILENAME]?.content);
-    if (needsCleanup) {
-      try {
-        await this.saveData(gistId, items);
-      } catch (error) {
-        console.warn('Failed to clean up ledger data', error);
-      }
-    }
-
-    return items;
+    return parseItemsContent(data.files?.[DATA_FILENAME]?.content);
   }
 
   async getSettings(gistId: string): Promise<LedgerSettings> {
@@ -194,16 +181,8 @@ export class GistService {
       gist_id: gistId,
     });
 
-    const { items, needsCleanup: needsDataCleanup } = parseItemsContent(data.files?.[DATA_FILENAME]?.content);
+    const items = parseItemsContent(data.files?.[DATA_FILENAME]?.content);
     const { settings, needsCleanup } = parseSettingsContent(data.files?.[SETTINGS_FILENAME]?.content);
-
-    if (needsDataCleanup) {
-      try {
-        await this.saveData(gistId, items);
-      } catch (error) {
-        console.warn('Failed to clean up ledger data', error);
-      }
-    }
 
     if (needsCleanup) {
       try {
