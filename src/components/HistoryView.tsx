@@ -447,7 +447,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                     {formatAmount(locale, item.amount)}
                   </div>
 
-                  <div className="mt-3 xl:mt-0 flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-3 xl:mt-0 flex justify-end gap-1 opacity-100 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100 group-focus-within:opacity-100">
                     <button
                       onClick={() => setEditingItem(item)}
                       className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 dark:bg-indigo-950/30 rounded-lg transition-colors"
