@@ -59,6 +59,22 @@ const normalizeItems = (value: unknown): LedgerItem[] => {
   return value.map(normalizeLedgerItem).filter((item): item is LedgerItem => Boolean(item));
 };
 
+const parseItemsContent = (content?: string): { items: LedgerItem[]; needsCleanup: boolean } => {
+  if (!content) {
+    return { items: [], needsCleanup: false };
+  }
+
+  try {
+    const raw = JSON.parse(content) as unknown;
+    const items = normalizeItems(raw);
+    const needsCleanup =
+      Array.isArray(raw) && raw.some((item) => isPlainRecord(item) && 'templateId' in item);
+    return { items, needsCleanup };
+  } catch {
+    return { items: [], needsCleanup: false };
+  }
+};
+
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -144,7 +160,16 @@ export class GistService {
       gist_id: gistId,
     });
 
-    return normalizeItems(data.files?.[DATA_FILENAME]?.content ? JSON.parse(data.files[DATA_FILENAME].content!) as unknown : []);
+    const { items, needsCleanup } = parseItemsContent(data.files?.[DATA_FILENAME]?.content);
+    if (needsCleanup) {
+      try {
+        await this.saveData(gistId, items);
+      } catch (error) {
+        console.warn('Failed to clean up ledger data', error);
+      }
+    }
+
+    return items;
   }
 
   async getSettings(gistId: string): Promise<LedgerSettings> {
@@ -169,8 +194,16 @@ export class GistService {
       gist_id: gistId,
     });
 
-    const itemsContent = data.files?.[DATA_FILENAME]?.content;
+    const { items, needsCleanup: needsDataCleanup } = parseItemsContent(data.files?.[DATA_FILENAME]?.content);
     const { settings, needsCleanup } = parseSettingsContent(data.files?.[SETTINGS_FILENAME]?.content);
+
+    if (needsDataCleanup) {
+      try {
+        await this.saveData(gistId, items);
+      } catch (error) {
+        console.warn('Failed to clean up ledger data', error);
+      }
+    }
 
     if (needsCleanup) {
       try {
@@ -181,7 +214,7 @@ export class GistService {
     }
 
     return {
-      items: normalizeItems(itemsContent ? JSON.parse(itemsContent) as unknown : []),
+      items,
       settings,
     };
   }
