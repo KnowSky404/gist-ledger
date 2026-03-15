@@ -394,8 +394,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             className={cn(
               'flex-1 py-3 rounded-xl font-semibold text-white transition-all shadow-lg active:scale-[0.99]',
               type === 'expense'
-                ? 'bg-rose-500 hover:bg-rose-600 dark:bg-rose-500 dark:hover:bg-rose-400 shadow-rose-200/70 dark:shadow-rose-900/40'
-                : 'bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-400 shadow-emerald-200/70 dark:shadow-emerald-900/40',
+                ? 'bg-rose-400 hover:bg-rose-600 dark:bg-rose-400 dark:hover:bg-rose-500 shadow-rose-200/70 dark:shadow-rose-900/40'
+                : 'bg-emerald-400 hover:bg-emerald-600 dark:bg-emerald-400 dark:hover:bg-emerald-500 shadow-emerald-200/70 dark:shadow-emerald-900/40',
               isLoading && 'opacity-50 cursor-not-allowed pointer-events-none',
             )}
           >
