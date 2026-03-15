@@ -200,7 +200,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     <>
       {editingItem && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain bg-black/50 dark:bg-black/70 backdrop-blur-sm"
           onClick={() => setEditingItem(null)}
         >
           <div className="w-full max-w-lg" onClick={(event) => event.stopPropagation()}>
