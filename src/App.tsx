@@ -13,7 +13,6 @@ import {
   AlertCircle,
   RefreshCw,
   Languages,
-  Monitor,
   Moon,
   Sun,
 } from 'lucide-react';
@@ -209,6 +208,7 @@ const LanguageSwitcher = ({
 
 const ThemeSwitcher = ({
   preference,
+  systemTheme,
   onChange,
   label,
   systemLabel,
@@ -216,19 +216,21 @@ const ThemeSwitcher = ({
   darkLabel,
 }: {
   preference: ThemePreference;
+  systemTheme: Theme;
   onChange: (value: ThemePreference) => void;
   label: string;
   systemLabel: string;
   lightLabel: string;
   darkLabel: string;
 }) => {
+  const systemIcon = systemTheme === 'dark' ? Moon : Sun;
   const options: IconMenuOption<ThemePreference>[] = [
-    { value: 'system', label: systemLabel, icon: Monitor },
+    { value: 'system', label: systemLabel, icon: systemIcon },
     { value: 'light', label: lightLabel, icon: Sun },
     { value: 'dark', label: darkLabel, icon: Moon },
   ];
 
-  const triggerIcon = preference === 'system' ? Monitor : preference === 'dark' ? Moon : Sun;
+  const triggerIcon = preference === 'system' ? systemIcon : preference === 'dark' ? Moon : Sun;
 
   return (
     <IconMenu
@@ -553,6 +555,7 @@ function App() {
             <div className="flex items-center gap-2">
               <ThemeSwitcher
                 preference={themePreference}
+                systemTheme={systemTheme}
                 onChange={setThemePreference}
                 label={copy.common.themeToggle}
                 systemLabel={copy.common.themeSystem}
@@ -635,6 +638,7 @@ function App() {
           <div className="flex items-center gap-3 shrink-0">
             <ThemeSwitcher
               preference={themePreference}
+              systemTheme={systemTheme}
               onChange={setThemePreference}
               label={copy.common.themeToggle}
               systemLabel={copy.common.themeSystem}
