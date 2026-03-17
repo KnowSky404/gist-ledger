@@ -95,12 +95,14 @@ const IconMenu = <T extends string>({
   value,
   options,
   onChange,
+  badge,
 }: {
   label: string;
   icon: IconComponent;
   value: T;
   options: IconMenuOption<T>[];
   onChange: (value: T) => void;
+  badge?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,11 +142,14 @@ const IconMenu = <T extends string>({
         aria-haspopup="menu"
         aria-expanded={open}
         className={cn(
-          'inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm',
+          'relative inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm',
           open && 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
         )}
       >
         <TriggerIcon size={18} />
+        {badge && (
+          <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-900" />
+        )}
       </button>
 
       {open && (
@@ -239,6 +244,7 @@ const ThemeSwitcher = ({
       value={preference}
       onChange={onChange}
       options={options}
+      badge={preference === 'system'}
     />
   );
 };
