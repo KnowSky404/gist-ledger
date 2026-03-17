@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --date-icon-url: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjOTRhM2I4JyBzdHJva2Utd2lkdGg9JzEuNicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48cmVjdCB4PSczJyB5PSc0LjUnIHdpZHRoPScxOCcgaGVpZ2h0PScxNicgcng9JzMnLz48cGF0aCBkPSdNOCAzdjNNMTYgM3YzTTMgOWgxOCcvPjxwYXRoIGQ9J004IDEzaDJNMTIgMTNoMk0xNiAxM2gyTTggMTdoMk0xMiAxN2gyJy8+PC9zdmc+");
+}
+
+html.dark {
+  --date-icon-url: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjY2JkNWUxJyBzdHJva2Utd2lkdGg9JzEuNicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48cmVjdCB4PSczJyB5PSc0LjUnIHdpZHRoPScxOCcgaGVpZ2h0PScxNicgcng9JzMnLz48cGF0aCBkPSdNOCAzdjNNMTYgM3YzTTMgOWgxOCcvPjxwYXRoIGQ9J004IDEzaDJNMTIgMTNoMk0xNiAxM2gyTTggMTdoMk0xMiAxN2gyJy8+PC9zdmc+");
+}
+
 html,
 body,
 #root {
@@ -17,4 +25,30 @@ body {
 html.dark body {
   background: #020617;
   color: #e2e8f0;
+}
+
+@media (min-width: 768px) {
+  @supports (-webkit-appearance: none) {
+    input[type='date'].date-input {
+      background-image: var(--date-icon-url);
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-size: 1.05rem;
+      padding-right: 2.6rem;
+      cursor: pointer;
+    }
+
+    input[type='date'].date-input::-webkit-calendar-picker-indicator {
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    input[type='date'].date-input::-webkit-datetime-edit {
+      color: inherit;
+    }
+
+    input[type='date'].date-input::-webkit-inner-spin-button {
+      display: none;
+    }
+  }
 }

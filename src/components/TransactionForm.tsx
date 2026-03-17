@@ -238,7 +238,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               required
               value={date}
               onChange={(event) => setDate(event.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/60 border-none rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/60 border-none rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all date-input"
             />
           </div>
         </div>

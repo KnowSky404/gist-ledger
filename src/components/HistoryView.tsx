@@ -289,7 +289,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   setStartDate(event.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 date-input"
               />
               <input
                 type="date"
@@ -298,7 +298,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   setEndDate(event.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 date-input"
               />
             </div>
           </div>
