@@ -148,7 +148,10 @@ const IconMenu = <T extends string>({
       >
         <TriggerIcon size={18} />
         {badge && (
-          <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-900" />
+          <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center">
+            <span className="h-full w-full rounded-full border-2 border-indigo-500/70 dark:border-indigo-400/70" />
+            <span className="absolute h-2 w-2 rounded-full border-2 border-indigo-600 dark:border-indigo-300" />
+          </span>
         )}
       </button>
 
