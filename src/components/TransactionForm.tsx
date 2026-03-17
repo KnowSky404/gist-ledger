@@ -21,6 +21,7 @@ import {
   getMonthBudgetSnapshot,
   parseLedgerDate,
 } from '../utils/ledger';
+import { DateInput } from './DateInput';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -233,12 +234,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               <Calendar className="w-4 h-4" />
               {copy.common.date}
             </label>
-            <input
-              type="date"
+            <DateInput
               required
               value={date}
-              onChange={(event) => setDate(event.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/60 border-none rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all date-input"
+              onChange={setDate}
+              locale={locale}
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/60 border-none rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
           </div>
         </div>
