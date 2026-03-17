@@ -30,16 +30,17 @@ html.dark body {
 @media (min-width: 768px) {
   @supports (-webkit-appearance: none) {
     input[type='date'].date-input {
-      background-image: var(--date-icon-url);
-      background-repeat: no-repeat;
-      background-position: right 0.85rem center;
-      background-size: 1.05rem;
       padding-right: 2.6rem;
       cursor: pointer;
     }
 
     input[type='date'].date-input::-webkit-calendar-picker-indicator {
-      opacity: 0;
+      background-image: var(--date-icon-url);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 1.05rem;
+      color: transparent;
+      opacity: 1;
       cursor: pointer;
     }
 
