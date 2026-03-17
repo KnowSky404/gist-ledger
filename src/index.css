@@ -51,4 +51,17 @@ html.dark body {
       display: none;
     }
   }
+
+  @supports (-moz-appearance: none) {
+    input[type='date'].date-input {
+      appearance: none;
+      -moz-appearance: none;
+      background-image: var(--date-icon-url);
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-size: 1.05rem;
+      padding-right: 2.6rem;
+      cursor: pointer;
+    }
+  }
 }
