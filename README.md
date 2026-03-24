@@ -129,4 +129,4 @@ bun run cf:deploy
 
 ## 📄 License
 
-GNU General Public License v3.0 (GPL-3.0)
+GNU Affero General Public License v3.0 (AGPL-3.0-only)
